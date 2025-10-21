@@ -1,7 +1,3 @@
-Here’s a suggested **README.md** for your project hosted at [https://homeautomation-8714f.web.app](https://homeautomation-8714f.web.app). Feel free to modify sections (especially “Getting Started” or “Architecture”) to reflect your exact code, libraries, or personal style.
-
----
-
 # Rain Detection Dashboard – Clothes‑Shelter Automation
 
 A web dashboard that integrates weather forecast data and a microcontroller sensor (ESP32) to help automate and secure outdoor clothes‑shelter operations when rain or high‑humidity conditions are detected.
