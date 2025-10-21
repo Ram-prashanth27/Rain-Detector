@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rain Detection System</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    #map { height: 90vh; width: 100%; }
+    body { margin: 0; font-family: Arial, sans-serif; }
+    #weather-info {
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      font-size: 16px;
+      word-break: break-all;
+    }
+    #controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: white;
+      padding: 5px;
+      border-radius: 5px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    #legend {
+      background: white;
+      padding: 10px;
+      font-size: 14px;
+      position: absolute;
+      bottom: 30px;
+      left: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    .legend-color {
+      display: inline-block;
+      height: 12px;
+      width: 24px;
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="weather-info">Loading weather...</div>
+  <div id="map"></div>
+  <div id="controls">
+    <button id="btn-pause">Pause</button>
+    <button id="btn-play">Play</button>
+  </div>
+  <div id="legend">
+    <div><span class="legend-color" style="background:#00ffff"></span> Light Rain</div>
+    <div><span class="legend-color" style="background:#0000ff"></span> Moderate Rain</div>
+    <div><span class="legend-color" style="background:#ff0000"></span> Heavy Rain</div>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script>
+    var map = L.map('map').setView([13.0827, 80.2707], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: 'Map data © OpenStreetMap contributors'
+    }).addTo(map);
+
+    var rainLayer = L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=b8bb716c48221f628d80f13c9d40b195', {
+      opacity: 0.6
+    }).addTo(map);
+
+    document.getElementById('btn-pause').onclick = function() {
+      map.removeLayer(rainLayer);
+    };
+    document.getElementById('btn-play').onclick = function() {
+      map.addLayer(rainLayer);
+    };
+
+    var apiURL = 'https://api.openweathermap.org/data/2.5/weather?lat=13.0827&lon=80.2707&units=metric&appid=b8bb716c48221f628d80f13c9d40b195';
+    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(apiURL))
+      .then(response => response.json())
+      .then(data => {
+        if (data && data.contents) {
+          try {
+            var weather = JSON.parse(data.contents);
+            if (weather && weather.weather && weather.main && weather.weather.length > 0) {
+              var info = 'Location: Chennai | ' + weather.weather[0].main + ' | Temp: ' + weather.main.temp + '°C';
+              document.getElementById('weather-info').innerText = info;
+            } else if (weather.message) {
+              document.getElementById('weather-info').innerText = "OpenWeather error: " + weather.message;
+            } else {
+              document.getElementById('weather-info').innerText = "API structure unexpected: " + data.contents;
+            }
+          } catch (err) {
+            document.getElementById('weather-info').innerText = "Parse error: " + err + "\nRaw contents: " + data.contents;
+          }
+        } else {
+          document.getElementById('weather-info').innerText = "No contents in response: " + JSON.stringify(data);
+        }
+      })
+      .catch((e) => {
+        document.getElementById('weather-info').innerText = "Weather request failed: " + e;
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dynamic Rain Detector Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      overflow: auto;
+    }
+    .modal-content {
+      background: #fff;
+      margin: 40px auto;
+      padding: 15px;
+      border-radius: 8px;
+      max-width: 900px;
+      height: 80vh;
+      position: relative;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-content h3 {
+      margin: 0 0 10px;
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .close {
+      position: absolute;
+      top: 10px; right: 15px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #333;
+      cursor: pointer;
+      user-select: none;
+    }
+    iframe {
+      flex-grow: 1;
+      border: none;
+      width: 100%;
+      border-radius: 0 0 8px 8px;
+    }
+
+    /* Animated button styles */
+    #satelliteBtn {
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+      color: #fff;
+      background: linear-gradient(45deg, #0077ff, #00d4ff);
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      box-shadow: 0 0 15px #00d4ff88;
+      position: relative;
+      overflow: hidden;
+    }
+    #satelliteBtn::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.3) 10%, transparent 40%);
+      animation: ripple 3s linear infinite;
+      opacity: 0.6;
+      pointer-events: none;
+      border-radius: 50%;
+    }
+    #satelliteBtn:hover {
+      background: linear-gradient(45deg, #005fcc, #00b0cc);
+      box-shadow: 0 0 25px #00b0cccc;
+    }
+
+    @keyframes ripple {
+      0% {
+        transform: rotate(0deg) translate(0) rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg) translate(0) rotate(-360deg);
+      }
+    }
+
+    /* Weather Adventure Portal styles */
+    .weather-adventure-section {
+      background: #e7f0ff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      font-family: 'Montserrat', sans-serif;
+    }
+    .weather-adventure-section header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    #searchCity {
+      flex: 1 1 200px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-family: 'Montserrat', sans-serif;
+    }
+    #goBtn {
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      background-color: #0077ff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      font-weight: 600;
+    }
+    #goBtn:hover {
+      background-color: #005fcc;
+    }
+    #weatherDisplay {
+      font-family: 'Montserrat', sans-serif;
+      margin-top: 15px;
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .weather-visual.clear { color: gold; font-size: 50px; }
+    .weather-visual.rain { color: #0077ff; font-size: 50px; }
+    .weather-visual.snow { color: #00cfff; font-size: 50px; }
+
+  </style>
+</head>
+<body>
+<h1 style="text-align: center;">RAIN DETECTION SYSTEM</h1>
+  <div class="background-animation" id="bgAnimation"></div>
+
+  <div class="dashboard-wrapper">
+
+    <div class="main-display card">
+      <div class="weather-summary">
+        <h2 id="currentLocation">Loading location...</h2>
+        <div class="weather-icon-container">
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/869/869869.png"
+            alt="weather icon"
+            class="main-weather-icon"
+            id="weatherIcon"
+          />
+        </div>
+        <p class="current-temp" id="rainStatus">--°C</p>
+        <p class="weather-desc" id="weatherDescription">Tap to check weather</p>
+        <button class="check-weather-btn" id="checkWeatherBtn">
+          Check Live Weather <span class="arrow">→</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="card control-card">
+        <h2>CLOTHES SHELTER</h2>
+        <div class="control-content">
+          <img src="image/6165574.png" alt="clothes icon" class="control-icon" />
+          <span class="control-label">Move to Shelter</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleBtn" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card data-card">
+        <h2>ESP32 SENSOR</h2>
+        <div id="espDataContent" class="data-content">
+          <p>Connecting to ESP32...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-panel">
+      <div class="card forecast-card">
+        <h2>HOURLY FORECAST</h2>
+        <div class="forecast-list" id="rainForecast">
+          <p>Loading forecast...</p>
+        </div>
+      </div>
+
+      <div class="card tips-card">
+        <h2>SAFETY TIPS</h2>
+        <div class="tips-list">
+          <ul>
+            <li>🌂 Carry umbrella if rain chance > 40%</li>
+            <li>👚 Avoid drying clothes if humidity > 80%</li>
+            <li>⚡ Secure clotheslines during high winds</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card alerts-card">
+        <h2>ALERTS</h2>
+        <div class="alerts-content" id="alertsSection">
+          <p>No active alerts</p>
+        </div>
+      </div>
+
+      <!-- Satellite Weather Section -->
+      <div class="card satellite-card">
+        <h2>SATELLITE WEATHER DATA</h2>
+        <p>Click the button below to view live satellite imagery and data.</p>
+        <button id="satelliteBtn">Check Satellite Weather Data</button>
+      </div>
+
+      <!-- New Weather Adventure Portal Section -->
+      <div class="card weather-adventure-section">
+        <header>
+          <h1>Weather Adventure Portal</h1>
+          <input type="text" id="searchCity" placeholder="Enter city name..." />
+          <button id="goBtn">Explore</button>
+        </header>
+        <div id="weatherDisplay"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Existing Modals -->
+  <div id="weatherModal" class="modal">
+    <div class="modal-content">
+      <span id="modalClose" class="close">&times;</span>
+      <h3>Detailed Weather Forecast</h3>
+      <div id="modalWeatherInfo"></div>
+    </div>
+  </div>
+
+  <div id="espPopup" class="popup-message">Action Confirmed!</div>
+  <div id="clothesRope" class="clothes-rope"></div>
+  <div id="clothesAnimation" class="clothes-animation">
+    <img src="image/6165574.png" alt="Clothes Moving" />
+  </div>
+
+  <!-- Satellite Modal -->
+  <div id="satelliteModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="satelliteTitle" style="display:none;">
+    <div class="modal-content">
+      <span id="satelliteClose" class="close" aria-label="Close modal">&times;</span>
+      <h3 id="satelliteTitle">Live Satellite Weather</h3>
+      <iframe
+        id="satelliteIframe"
+        src=""
+        title="Satellite Weather Data"
+      ></iframe>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Satellite modal functionality
+    const satelliteBtn = document.getElementById("satelliteBtn");
+    const satelliteModal = document.getElementById("satelliteModal");
+    const satelliteClose = document.getElementById("satelliteClose");
+    const satelliteIframe = document.getElementById("satelliteIframe");
+
+    satelliteBtn.addEventListener("click", () => {
+      satelliteIframe.src = "head.html";  // Load head.html inside iframe
+      satelliteModal.style.display = "block";
+    });
+
+    satelliteClose.addEventListener("click", () => {
+      satelliteModal.style.display = "none";
+      satelliteIframe.src = "";  // Clear iframe src to stop loading
+    });
+
+    window.addEventListener("click", (e) => {
+      if (e.target === satelliteModal) {
+        satelliteModal.style.display = "none";
+        satelliteIframe.src = "";
+      }
+    });
+
+    // Weather Adventure Portal - City search
+    document.getElementById('goBtn').onclick = async () => {
+      const city = document.getElementById('searchCity').value.trim();
+      if (!city) return;
+
+      const display = document.getElementById('weatherDisplay');
+      display.innerHTML = "Loading...";
+
+      const apiKey = "b8bb716c48221f628d80f13c9d40b195"; // Your API key
+      try {
+        const resp = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&appid=${apiKey}`);
+
+        if (!resp.ok) {
+          display.textContent = "City not found!";
+          return;
+        }
+
+        const data = await resp.json();
+        const weather = data.weather[0].main.toLowerCase();
+
+        display.innerHTML = `
+          <h2>${data.name}, ${data.sys.country}</h2>
+          <div class="weather-visual ${weather}">☀️🌧️❄️</div>
+          <p>${data.weather[0].description}</p>
+          <p>${Math.round(data.main.temp)}°C, Humidity: ${data.main.humidity}%</p>
+          <p><em>${weatherAdvice(weather)}</em></p>
+        `;
+
+      } catch (error) {
+        display.textContent = "Error fetching weather data.";
+      }
+    };
+
+    function weatherAdvice(type) {
+      switch(type) {
+        case 'rain': return 'Don’t forget your umbrella!';
+        case 'clear': return 'Great day to be outdoors!';
+        case 'snow': return 'Bundle up — it’s cold!';
+        default: return 'Stay weather-wise!';
+      }
+    }
+  </script>
+</body>
+</html>
